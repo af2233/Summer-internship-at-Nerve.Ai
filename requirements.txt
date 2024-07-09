@@ -1,0 +1,9 @@
+numpy
+networkx
+matplotlib
+scipy
+psycopg2
+sqlalchemy
+dotenv
+pandas
+black
