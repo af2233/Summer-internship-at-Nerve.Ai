@@ -78,31 +78,9 @@ def get_node_colors(data):
 
 def visualize_graph(graph, path, pos, colors, mean_percent):
     plt.figure(figsize=(10, 7))
-    nx.draw(
-        graph,
-        pos,
-        node_color=colors,
-        edge_color="gray",
-        node_size=10,
-        font_size=1,
-        arrows=True,
-    )
-    nx.draw(
-        path,
-        pos,
-        node_color="white",
-        edge_color="yellow",
-        node_size=0.5,
-        font_size=1,
-        arrows=True,
-    )
-    plt.text(
-        0.5,
-        0.05,
-        f"Average Percent: {mean_percent:.2f}",
-        ha="center",
-        transform=plt.gcf().transFigure,
-    )
+    nx.draw(graph, pos, node_color=colors, edge_color="gray", node_size=50, font_size=1, arrows=True, alpha=0.5)
+    nx.draw_networkx_edges(path, pos, edge_color="yellow", width=2.0)
+    plt.text(0.5, 0.05, f"Average Percent: {mean_percent:.2f}", ha="center", transform=plt.gcf().transFigure)
     plt.show()
 
 
