@@ -6,3 +6,4 @@ psycopg2
 sqlalchemy
 pandas
 black
+python-dotenv
