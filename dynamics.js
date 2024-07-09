@@ -1,7 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
 const Op = require('sequelize').Op;
-const { PythonShell } = require('python-shell');
 const { spawn } = require('child_process');
 
 const sequelize = require('./sequelize');
@@ -29,7 +28,7 @@ const saveMatrix = async (matrix) => {
 };
 
 
-const updateObject = async (matrix) => {
+async function updateObject() {
   try {
     const matrix = await loadMatrix();
 
@@ -52,7 +51,7 @@ const updateObject = async (matrix) => {
 
     // Понижение уровня заряда
     selectedObject.percent = Math.max(selectedObject.percent - charge_spent, 0);
-    selectedObject.active = (selectedObject.percent >= 50);
+    selectedObject.isActive = (selectedObject.percent < 50);
 
     await selectedObject.save();
 
@@ -72,22 +71,18 @@ const updateObject = async (matrix) => {
 
     await saveMatrix(matrix);
 
-    console.log('Distance matrix updated and saved.');
+    console.log('Distance matrix updated and saved.\n');
   } catch (error) {
     console.error('Error updating object:', error);
   }
-};
+}
 
 
-
-
-
-const chargeStation = async () => {
+async function chargeStation() {
   try {
-    const selectedObject = await Entity.findOne({ where: {charged_batteries: 0, discharged_batteries: 10, isActive: false, isHere: false} });
+    const selectedObject = await Entity.findOne({ where: { isActive: false, isHere: false} });
 
-    const N = selectedObject.length;
-    if (N === 0) {
+    if (selectedObject.length === 0) {
       return;
     }
 
@@ -98,38 +93,49 @@ const chargeStation = async () => {
 
     await selectedObject.save();
 
-    console.log(`Station with ID ${selectedObject.id} charged and ready.`);
-
+    console.log(`Station with ID ${selectedObject.id} charged and ready.\n`);
   } catch (error) {
     console.error('Error updating object:', error);
   }
-};
+}
 
 
+async function executeScript() {
+
+  let pythonProcess;
+  const specialOutput = "Program finished.";
+
+  const intervalId = setInterval(() => {
+    pythonProcess = spawn('python', ['algorithm.py']);
+
+    pythonProcess.stdout.on('data', (data) => {
+      const output = data.toString();
+      console.log(`stdout: ${output}`);
+
+      // Check for the special output
+      if (output.includes(specialOutput)) {
+        clearInterval(intervalId); // Stop the interval
+        pythonProcess.kill(); // Terminate the Python process
+        console.log('Python process terminated.');
+      }
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
 
 
-
-
-
-
-function executeScript() {
-
-  const pythonProcess = spawn('python', ['algorithm.py']);
-  pythonProcess.stdout.on('data', (data) => {
-    console.log(data.toString());
-  });
-
-  pythonProcess.stderr.on('data', (data) => {
-    console.log(data.toString());
-  });
+  }, 3000);
 }
 
 
 
 async function startUpdating() {
-  setInterval(() => updateObject(), 2000);  // Update every 2 seconds
-  setInterval(() => executeScript(), 3000);  // Update every 3 seconds
-  setInterval(() => chargeStation(), 60000);  // Updates every minute
+  setInterval(updateObject, 6000);  // Update every 6 seconds
+  setInterval(chargeStation, 60000);  // Updates every minute
+
+  executeScript();
+
 }
 
 
