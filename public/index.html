@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nerve</title>
+  <style>
+    #canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="1000" height="1000"></canvas>
+  <script>
+    async function fetchEntities() {
+        const response = await fetch('/api/entities');
+        return await response.json();
+    }
+    
+    function drawEntities(ctx, entities) {
+        // Save the current context state
+        ctx.save();
+        
+        // Clear the canvas
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        // Move to the center of the canvas
+        ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
+
+        // Move back to the top-left of the canvas
+        ctx.translate(-ctx.canvas.height / 2, -ctx.canvas.width / 2);
+
+        entities.forEach(entity => {
+            ctx.beginPath();
+            ctx.arc(entity.x * 10, (ctx.canvas.width - entity.y * 10), 10, 0, 2 * Math.PI);
+            if (entity.isHere == true) {  // точка с чарджером
+              ctx.fillStyle = 'yellow';
+            } else if (entity.percent !== null) {  // проверка на самокат
+              ctx.fillStyle = entity.isActive ? 'red' : 'green';
+            } else if (entity.charged_batteries !== null) {  // проверка на шкаф
+              ctx.fillStyle = entity.isActive ? 'blue' : 'orange';
+            } else {
+              ctx.fillStyle = 'grey';
+            }
+            ctx.fill();
+            ctx.stroke();
+        });
+
+        // Restore the context to its original state
+        ctx.restore();
+    }
+    
+    async function updateVisualization() {
+        const entities = await fetchEntities();
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        drawEntities(ctx, entities);
+    }
+    
+    setInterval(updateVisualization, 1000); // Update every second
+    updateVisualization(); // Initial update
+  </script>
+</body>
+</html>
