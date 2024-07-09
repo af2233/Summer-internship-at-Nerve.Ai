@@ -1,25 +1,11 @@
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from sqlalchemy import create_engine, Column, Integer, Float, Boolean
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-# Database connection setup
-DATABASE_URI = "postgresql+psycopg2://postgres:2233@localhost/nerve"
-
-Base = declarative_base()
-
-
-class Entity(Base):
-    __tablename__ = "entities"
-    id = Column(Integer, primary_key=True)
-    x = Column(Float)
-    y = Column(Float)
-    percent = Column(Float)
-    charged_batteries = Column(Integer)
-    discharged_batteries = Column(Integer)
-    isActive = Column(Boolean)
-    isHere = Column(Boolean)
+from config import DATABASE_URL
+from models.tables import Entity
 
 
 def read_matrix(file_path):
@@ -38,7 +24,7 @@ def read_matrix(file_path):
 
 def read_data_from_db():
     # Create database connection
-    engine = create_engine(DATABASE_URI)
+    engine = create_engine(DATABASE_URL)
     Session = sessionmaker(bind=engine)
     session = Session()
 

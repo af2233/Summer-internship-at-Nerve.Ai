@@ -1,36 +1,12 @@
 import numpy as np
 import sqlalchemy as db
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy import and_
 from scipy.spatial import distance
 
-# Database URL
-DATABASE_URL = "postgresql+psycopg2://postgres:2233@localhost/nerve"
 
-Base = declarative_base()
-
-
-# Model classes for the tables
-class Entity(Base):
-    __tablename__ = "entities"
-    id = db.Column(db.Integer, primary_key=True)
-    x = db.Column(db.Float)
-    y = db.Column(db.Float)
-    percent = db.Column(db.Float)
-    charged_batteries = db.Column(db.Integer)
-    discharged_batteries = db.Column(db.Integer)
-    isActive = db.Column(db.Boolean)
-    isHere = db.Column(db.Boolean)
-
-
-class Charger(Base):
-    __tablename__ = "charger"
-    id = db.Column(db.Integer, primary_key=True)
-    x = db.Column(db.Float)
-    y = db.Column(db.Float)
-    charged_batteries = db.Column(db.Integer)
-    discharged_batteries = db.Column(db.Integer)
-
+from models.tables import Entity, Charger
+from config import DATABASE_URL
 
 # Database connection and session creation
 def create_session():
