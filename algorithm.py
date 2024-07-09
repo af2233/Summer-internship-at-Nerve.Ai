@@ -40,6 +40,10 @@ def create_session():
 
 
 # Database query functions
+def read_data_from_db(session):
+    return session.query(Entity).order_by(Entity.id).all()  # sorting by id
+
+
 def get_start_vertex(session):
     return session.query(Entity).filter_by(isHere=True).first()
 
@@ -211,48 +215,52 @@ def update_vertex_data(session, start_vertex, end_vertex):
 
 
 # Script functions
-def closest_vehicle_search(session, filenames):
+def closest_vehicle_search(session, file_names):
 
     # Get start Entity
     start_vertex = get_start_vertex(session)
 
     # Get active vertices
     active_vehicles = get_active_vehicles(session)
-
-    # Find closest end Entity
-    end_vertex = find_closest_vertex(start_vertex, active_vehicles)
+    
+    if not active_vehicles:
+        return start_vertex, False
+    else:
+        end_vertex = find_closest_vertex(start_vertex, active_vehicles)
 
     # Get indices for start and end vertices
     start_index = start_vertex.id - 1  # Assuming IDs start from 1
     end_index = end_vertex.id - 1
 
     # Read the adjacency matrix from file
-    matrix = read_matrix(filenames['in'])
+    matrix = read_matrix(file_names['in'])
 
     # Create the shortest path matrix
     shortest_path_matrix = create_path(matrix, start_index, end_index)
 
     # Write the result to the output file
-    write_matrix(filenames['out'], shortest_path_matrix)
+    write_matrix(file_names['out'], shortest_path_matrix)
 
     # Update the data in the database
     update_vehicle_data(session, start_vertex, end_vertex)
     return start_vertex, end_vertex
 
 
-def closest_charging_station_search(session, filenames):
+def closest_charging_station_search(session, file_names):
 
     # Get start Entity
     start_vertex = get_start_vertex(session)
 
     # Get active charging stations
     active_charging_stations = get_active_charging_stations(session)
-
-    # Find closest end Entity
-    end_vertex = find_closest_vertex(start_vertex, active_charging_stations)
+    
+    if not active_charging_stations:
+        return start_vertex, False
+    else:
+        end_vertex = find_closest_vertex(start_vertex, active_charging_stations)
 
     # Read the adjacency matrix from file
-    matrix = read_matrix(filenames['in'])
+    matrix = read_matrix(file_names['in'])
 
     # Get indices for start and end vertices
     start_index = start_vertex.id - 1  # Assuming IDs start from 1
@@ -262,23 +270,27 @@ def closest_charging_station_search(session, filenames):
     shortest_path_matrix = create_path(matrix, start_index, end_index)
 
     # Write the result to the output file
-    write_matrix(filenames['out'], shortest_path_matrix)
+    write_matrix(file_names['out'], shortest_path_matrix)
 
     # Update the data in the database
     return start_vertex, end_vertex
 
 
-def empty_charging_station_search(session, filenames):
+def empty_charging_station_search(session, file_names):
 
     # Get start Entity
     start_vertex = get_start_vertex(session)
 
     # Get empty station
     empty_charging_station = get_empty_charging_station(session)
-    end_vertex = empty_charging_station
+    
+    if not empty_charging_station:
+        return start_vertex, False
+    else:
+        end_vertex = empty_charging_station
 
     # Read the adjacency matrix from file
-    matrix = read_matrix(filenames['in'])
+    matrix = read_matrix(file_names['in'])
 
     # Get indices for start and end vertices
     start_index = start_vertex.id - 1  # Assuming IDs start from 1
@@ -288,22 +300,26 @@ def empty_charging_station_search(session, filenames):
     shortest_path_matrix = create_path(matrix, start_index, end_index)
 
     # Write the result to the output file
-    write_matrix(filenames['out'], shortest_path_matrix)
+    write_matrix(file_names['out'], shortest_path_matrix)
 
     # Update the data in the database
     return start_vertex, end_vertex
 
 
-def heading_home(session, filenames):
+def heading_home(session, file_names):
 
     # Get start Entity
     start_vertex = get_start_vertex(session)
 
     home_vertex = get_home_vertex(session)
-    end_vertex = home_vertex
+    
+    if not home_vertex:
+        return start_vertex, False
+    else:
+        end_vertex = home_vertex
 
     # Read the adjacency matrix from file
-    matrix = read_matrix(filenames['in'])
+    matrix = read_matrix(file_names['in'])
 
     # Get indices for start and end vertices
     start_index = start_vertex.id - 1  # Assuming IDs start from 1
@@ -313,7 +329,7 @@ def heading_home(session, filenames):
     shortest_path_matrix = create_path(matrix, start_index, end_index)
 
     # Write the result to the output file
-    write_matrix(filenames['out'], shortest_path_matrix)
+    write_matrix(file_names['out'], shortest_path_matrix)
 
     # Update the data in the database
     update_vertex_data(session, start_vertex, end_vertex)
@@ -321,117 +337,101 @@ def heading_home(session, filenames):
 
 
 # Main processing functions
-def process_low_mean_percent(session, mean_percent, charger, filenames):
+def process_low_mean_percent(session, mean_percent, charger, file_names):
     if charger.charged_batteries > 0:
         print(f"{mean_percent}%\t|\tcharged_batteries > 0")
 
-        start_vertex, end_vertex = closest_vehicle_search(session, filenames)
+        start_vertex, end_vertex = closest_vehicle_search(session, file_names)
         
-        # Updating charger
-        charger.x = end_vertex.x
-        charger.y = end_vertex.y
-        charger.charged_batteries -= 1
-        charger.discharged_batteries += 1
-        session.commit()
+        if end_vertex != False:
+            # Updating charger
+            charger.x = end_vertex.x
+            charger.y = end_vertex.y
+            charger.charged_batteries -= 1
+            charger.discharged_batteries += 1
+            session.commit()
+        else:
+            return
 
     elif charger.discharged_batteries == 10:
-        print(f"{mean_percent}%\t|\tdischarged_batteries == 0")
+        print(f"{mean_percent}%\t|\tdischarged_batteries == 10")
         
-        start_vertex, end_vertex = closest_charging_station_search(
-            session, filenames
-        )
-        update_charging_station_data(
-            session,
-            start_vertex,
-            end_vertex,
-            charger.charged_batteries,
-            charger.discharged_batteries,
-        )
+        start_vertex, end_vertex = closest_charging_station_search(session, file_names)
+    
+        if end_vertex != False:
+            update_charging_station_data(session, start_vertex, end_vertex, charger.charged_batteries, charger.discharged_batteries)
         
-        # Updating charger
-        charger.x = end_vertex.x
-        charger.y = end_vertex.y
-        charger.charged_batteries = 10
-        charger.discharged_batteries = 0
-        session.commit()
+            # Updating charger
+            charger.x = end_vertex.x
+            charger.y = end_vertex.y
+            charger.charged_batteries = 10
+            charger.discharged_batteries = 0
+            session.commit()
+        else:
+            return
 
     else:
         print(f"{mean_percent}%\t|\tmissing batteries")
-        start_vertex, end_vertex = closest_charging_station_search(
-            session, filenames
-        )
-        update_charging_station_data(
-            session,
-            start_vertex,
-            end_vertex,
-            charger.charged_batteries,
-            charger.discharged_batteries,
-        )
-        
+    
+        start_vertex, end_vertex = closest_charging_station_search(session, file_names)
+
+        if end_vertex != False:
+            update_charging_station_data(session, start_vertex, end_vertex, charger.charged_batteries, charger.discharged_batteries)
+
+            # Updating charger
+            charger.x = end_vertex.x
+            charger.y = end_vertex.y
+            charger.charged_batteries = 10
+            charger.discharged_batteries = 0
+            session.commit()
+        else:
+            return
+
+
+
+def process_high_mean_percent(session, mean_percent, charger, file_names):
+    print(f"{mean_percent}%\t|\theading home")
+
+    start_vertex, end_vertex = empty_charging_station_search(session, file_names)
+
+    if end_vertex != False:
+        update_charging_station_data(session, start_vertex, end_vertex, charger.charged_batteries, charger.discharged_batteries)
+
         # Updating charger
         charger.x = end_vertex.x
         charger.y = end_vertex.y
-        charger.charged_batteries = 10
+        charger.charged_batteries = 0
         charger.discharged_batteries = 0
         session.commit()
 
-
-
-def process_high_mean_percent(session, mean_percent, charger, filenames):
-    print(f"{mean_percent}%\t|\theading home")
-    start_vertex, end_vertex = empty_charging_station_search(
-        session, filenames
-    )
-    update_charging_station_data(
-        session,
-        start_vertex,
-        end_vertex,
-        charger.charged_batteries,
-        charger.discharged_batteries,
-    )
-        
-    # Updating charger
-    charger.x = end_vertex.x
-    charger.y = end_vertex.y
-    charger.charged_batteries = 0
-    charger.discharged_batteries = 0
-    session.commit()
-
-    # final function
-    start_vertex, end_vertex = heading_home(session, filenames)
-    charger.x = end_vertex.x
-    charger.y = end_vertex.y
-    session.commit()
-
-
-
-
-def read_data_from_db(session):
-    data = []
-    data = session.query(Entity).order_by(Entity.id).all()  # sorting by id
-    return data
-
-
+        # final function
+        start_vertex, end_vertex = heading_home(session, file_names)
+        charger.x = end_vertex.x
+        charger.y = end_vertex.y
+        session.commit()
+    else:
+        return
 
 
 def main():
     session = create_session()
-    filenames = {"in": "matrix.txt", "out": "path.txt"}
+    file_names = {"in": "matrix.txt", "out": "path.txt"}
 
     data = read_data_from_db(session)
     charger = get_charger(session)
     mean_percent = calculate_mean_percent(data)
 
     if mean_percent < 80:
-        process_low_mean_percent(session, mean_percent, charger, filenames)
+        process_low_mean_percent(session, mean_percent, charger, file_names)
     else:
         if (charger.x == 0) and (charger.y == 0):
             return
-        process_high_mean_percent(session, mean_percent, charger, filenames)
-        print("Program finished.")
+        else:
+            process_high_mean_percent(session, mean_percent, charger, file_names)
+            print("Program finished.")
         
-
     session.close()
+    return
 
 
 if __name__ == "__main__":
