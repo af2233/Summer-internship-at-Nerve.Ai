@@ -339,7 +339,7 @@ def heading_home(session, file_names):
 # Main processing functions
 def process_low_mean_percent(session, mean_percent, charger, file_names):
     if charger.charged_batteries > 0:
-        print(f"{mean_percent}%\t|\tcharged_batteries > 0")
+        print(f"{mean_percent} %\t|\tvehicle search")
 
         start_vertex, end_vertex = closest_vehicle_search(session, file_names)
         
@@ -354,7 +354,7 @@ def process_low_mean_percent(session, mean_percent, charger, file_names):
             return
 
     elif charger.discharged_batteries == 10:
-        print(f"{mean_percent}%\t|\tdischarged_batteries == 10")
+        print(f"{mean_percent} %\t|\tfinding charging station")
         
         start_vertex, end_vertex = closest_charging_station_search(session, file_names)
     
@@ -371,7 +371,7 @@ def process_low_mean_percent(session, mean_percent, charger, file_names):
             return
 
     else:
-        print(f"{mean_percent}%\t|\tmissing batteries")
+        print(f"{mean_percent} %\t|\tmissing batteries")
     
         start_vertex, end_vertex = closest_charging_station_search(session, file_names)
 
@@ -390,7 +390,7 @@ def process_low_mean_percent(session, mean_percent, charger, file_names):
 
 
 def process_high_mean_percent(session, mean_percent, charger, file_names):
-    print(f"{mean_percent}%\t|\theading home")
+    print(f"{mean_percent} %\t|\twork is done")
 
     start_vertex, end_vertex = empty_charging_station_search(session, file_names)
 
@@ -405,6 +405,7 @@ def process_high_mean_percent(session, mean_percent, charger, file_names):
         session.commit()
 
         # final function
+        print(f"{mean_percent} %\t|\theading home")
         start_vertex, end_vertex = heading_home(session, file_names)
         charger.x = end_vertex.x
         charger.y = end_vertex.y

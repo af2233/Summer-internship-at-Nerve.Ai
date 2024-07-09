@@ -59,5 +59,5 @@ async function generateData(N, M, K) {
 }
 
 
-// generateData(150, 10, 95);
-generateData(20, 2, 0);
+generateData(150, 10, 95);
+// generateData(20, 2, 10);

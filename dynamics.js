@@ -80,7 +80,7 @@ async function updateObject() {
 
 async function chargeStation() {
   try {
-    const selectedObject = await Entity.findOne({ where: { isActive: false, isHere: false} });
+    const selectedObject = await Entity.findOne({ where: { isActive: false, isHere: false} }); // выбираем один неактивный шкаф
 
     if (selectedObject.length === 0) {
       return;
@@ -125,7 +125,7 @@ async function executeScript() {
     });
 
 
-  }, 3000);
+  }, 3000); // Updates every 3 seconds
 }
 
 
