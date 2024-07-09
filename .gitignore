@@ -132,6 +132,5 @@ dist
 # Custom ignores
 .venv
 .env
-INFO
 matrix.txt
 path.txt
