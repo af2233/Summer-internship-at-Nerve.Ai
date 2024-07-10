@@ -224,7 +224,6 @@ def closest_vehicle_search(session, file_names):
 
 def closest_charging_station_search(session, file_names):
 
-    # Get start Entity
     start_vertex = get_start_vertex(session)
 
     # Get active charging stations
@@ -235,26 +234,20 @@ def closest_charging_station_search(session, file_names):
     else:
         end_vertex = find_closest_vertex(start_vertex, active_charging_stations)
 
-    # Read the adjacency matrix from file
     matrix = read_matrix(file_names['in'])
 
-    # Get indices for start and end vertices
-    start_index = start_vertex.id - 1  # Assuming IDs start from 1
+    start_index = start_vertex.id - 1
     end_index = end_vertex.id - 1
 
-    # Create the shortest path matrix
     shortest_path_matrix = create_path(matrix, start_index, end_index)
 
-    # Write the result to the output file
     write_matrix(file_names['out'], shortest_path_matrix)
 
-    # Update the data in the database
     return start_vertex, end_vertex
 
 
 def empty_charging_station_search(session, file_names):
 
-    # Get start Entity
     start_vertex = get_start_vertex(session)
 
     # Get empty station
@@ -265,28 +258,23 @@ def empty_charging_station_search(session, file_names):
     else:
         end_vertex = empty_charging_station
 
-    # Read the adjacency matrix from file
     matrix = read_matrix(file_names['in'])
 
-    # Get indices for start and end vertices
-    start_index = start_vertex.id - 1  # Assuming IDs start from 1
+    start_index = start_vertex.id - 1
     end_index = end_vertex.id - 1
 
-    # Create the shortest path matrix
     shortest_path_matrix = create_path(matrix, start_index, end_index)
 
-    # Write the result to the output file
     write_matrix(file_names['out'], shortest_path_matrix)
 
-    # Update the data in the database
     return start_vertex, end_vertex
 
 
 def heading_home(session, file_names):
 
-    # Get start Entity
     start_vertex = get_start_vertex(session)
 
+    # Get starting point
     home_vertex = get_home_vertex(session)
     
     if not home_vertex:
@@ -294,17 +282,13 @@ def heading_home(session, file_names):
     else:
         end_vertex = home_vertex
 
-    # Read the adjacency matrix from file
     matrix = read_matrix(file_names['in'])
 
-    # Get indices for start and end vertices
-    start_index = start_vertex.id - 1  # Assuming IDs start from 1
+    start_index = start_vertex.id - 1
     end_index = end_vertex.id - 1
 
-    # Create the shortest path matrix
     shortest_path_matrix = create_path(matrix, start_index, end_index)
 
-    # Write the result to the output file
     write_matrix(file_names['out'], shortest_path_matrix)
 
     # Update the data in the database
@@ -320,6 +304,7 @@ def process_low_mean_percent(session, mean_percent, charger, file_names):
         start_vertex, end_vertex = closest_vehicle_search(session, file_names)
         
         if end_vertex != False:
+
             # Updating charger
             charger.x = end_vertex.x
             charger.y = end_vertex.y

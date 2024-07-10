@@ -32,7 +32,7 @@ async function updateObject() {
   try {
     const matrix = await loadMatrix();
 
-    const vehicles = await Entity.findAll({ where: {percent: {[Op.ne]: null, [Op.gt]: 20}, isHere: false} });  // выбираем только самокаты
+    const vehicles = await Entity.findAll({ where: {percent: {[Op.ne]: null, [Op.gt]: 20}, isHere: false} });  // choosing only scooters
 
     const N = vehicles.length;
     if (N === 0) {
@@ -43,13 +43,13 @@ async function updateObject() {
     const randomIndex = Math.floor(Math.random() * N);
     const selectedObject = vehicles[randomIndex];
 
-    // Случайное изменение координат
+    // Random change of coordinates
     const coords = {x: selectedObject.x, y: selectedObject.y};
     selectedObject.x = Math.random() * 100;
     selectedObject.y = Math.random() * 100;
     const charge_spent = Math.floor(calculateDistance(coords, selectedObject));  // 1% == 1km
 
-    // Понижение уровня заряда
+    // Reducing the charge level
     selectedObject.percent = Math.max(selectedObject.percent - charge_spent, 0);
     selectedObject.isActive = (selectedObject.percent < 50);
 
@@ -57,7 +57,7 @@ async function updateObject() {
 
     console.log(`Object with ID ${selectedObject.id} updated successfully.`);
 
-    // Обновление матрицы расстояний для измененного объекта
+    // Update the distance matrix for a changed object
     const connectivityThreshold = 0.01;  // chance of being connected
     for (let i = 0; i < N; i++) {
       const obj = vehicles[i];
@@ -80,13 +80,13 @@ async function updateObject() {
 
 async function chargeStation() {
   try {
-    const selectedObject = await Entity.findOne({ where: { isActive: false, isHere: false} }); // выбираем один неактивный шкаф
+    const selectedObject = await Entity.findOne({ where: { isActive: false, isHere: false} }); // chosing one inactive charging station
 
     if (selectedObject.length === 0) {
       return;
     }
 
-    // Зарядка батарей
+    // Charging up batteries
     selectedObject.charged_batteries = 10;
     selectedObject.discharged_batteries = 0;
     selectedObject.isActive = true;
