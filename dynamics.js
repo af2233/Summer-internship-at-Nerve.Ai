@@ -30,8 +30,6 @@ const saveMatrix = async (matrix) => {
 
 async function updateObject() {
   try {
-    const matrix = await loadMatrix();
-
     const vehicles = await Entity.findAll({ where: {percent: {[Op.ne]: null, [Op.gt]: 20}, isHere: false} });  // выбираем только самокаты
 
     const N = vehicles.length;
@@ -57,6 +55,8 @@ async function updateObject() {
 
     console.log(`Object with ID ${selectedObject.id} updated successfully.`);
 
+    const matrix = await loadMatrix();
+
     // Обновление матрицы расстояний для измененного объекта
     const connectivityThreshold = 0.01;  // chance of being connected
     for (let i = 0; i < N; i++) {
@@ -69,6 +69,28 @@ async function updateObject() {
       }
     }
 
+    // function to fix the matrix, if a node doesn't have connections
+    for (let obj = 0; obj < N; ++obj) {
+      let flag = false;
+      for (let i = 0; i < N; i++) {
+        if (matrix[obj][i] != 'Infinity') {
+          flag = true;
+          break;
+        }
+      }
+      for (let i = 0; i < N; i++) {
+        if (matrix[i][obj] != 'Infinity') {
+          flag = true;
+          break;
+        }
+      }
+      if (flag == false) {
+        const randind = Math.floor(Math.random() * N);
+        matrix[obj][randind] = calculateDistance(vehicles[obj], vehicles[randind]).toFixed(5);
+        matrix[randind][obj] = calculateDistance(vehicles[randind], vehicles[obj]).toFixed(5);
+      }
+    }
+  
     await saveMatrix(matrix);
 
     console.log('Distance matrix updated and saved.\n');
