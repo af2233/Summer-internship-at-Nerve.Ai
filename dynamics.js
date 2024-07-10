@@ -55,6 +55,8 @@ async function updateObject() {
 
     console.log(`Object with ID ${selectedObject.id} updated successfully.`);
 
+    const matrix = await loadMatrix();
+
     // Update the distance matrix for a changed object
     const connectivityThreshold = 0.01;  // chance of being connected
     for (let i = 0; i < N; i++) {
