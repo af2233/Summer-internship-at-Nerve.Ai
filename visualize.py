@@ -29,13 +29,16 @@ def read_data_from_db():
     session = Session()
 
     data = []
+    coords = {}
 
     try:
-        data = session.query(Entity).order_by(Entity.id).all()  # sorting by id
+        data = session.query(Entity).order_by(Entity.id).all()  # sorting by id 
+        for idx, row in enumerate(data):
+            coords[idx] = (row.x, row.y)
     finally:
         session.close()
 
-    return data
+    return data, coords
 
 
 def create_graph_from_matrix(matrix):
@@ -71,25 +74,19 @@ def visualize_graph(graph, path, pos, colors, mean_percent):
 
 
 # Main function
-def main():
-    data = read_data_from_db()
-
-    coords = {}
-    for idx, row in enumerate(data):
-        coords[idx] = (row.x, row.y)
-
-    # Filter rows where percent is not null and calculate the mean
-    mean_percent = np.mean([row.percent for row in data if row.percent is not None])
-    colors = get_node_colors(data)
-
+def main():    
+    
     file_path = "matrix.txt"
-
     matrix = read_matrix(file_path)
     G = create_graph_from_matrix(matrix)
 
     file_path = "path.txt"
     matrix = read_matrix(file_path)
     H = create_graph_from_matrix(matrix)
+
+    data, coords = read_data_from_db()
+    colors = get_node_colors(data)
+    mean_percent = np.mean([row.percent for row in data if row.percent is not None])
 
     visualize_graph(G, H, coords, colors, mean_percent)
 

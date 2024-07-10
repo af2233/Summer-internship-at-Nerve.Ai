@@ -45,7 +45,7 @@ const Entity = sequelize.define('Entity', {
 }, {
   // freezeTableName: true,
   tableName: 'entities',
-  timestamps: false,
+  // timestamps: false,
 });
 
 

@@ -30,7 +30,7 @@ const Charger = sequelize.define('Charger', {
 }, {
   // freezeTableName: true,
   tableName: 'charger',
-  timestamps: false,
+  // timestamps: false,
 });
 
 
